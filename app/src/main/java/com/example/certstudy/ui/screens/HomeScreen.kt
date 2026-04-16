@@ -19,15 +19,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.certstudy.model.StudyKeyword
+import com.example.certstudy.model.Keyword
 import com.example.certstudy.viewmodel.StudyViewModel
+import com.example.certstudy.viewmodel.MainViewModel
 
 @Composable
 fun HomeScreen(
     studyViewModel: StudyViewModel,
+    mainViewModel: MainViewModel,
     onOpenExamDateSetting: () -> Unit
 ) {
     val uiState by studyViewModel.homeUiState.collectAsStateWithLifecycle()
+    val mainUiState by mainViewModel.uiState.collectAsStateWithLifecycle()
 
     LazyColumn(
         modifier = Modifier
@@ -76,14 +79,14 @@ fun HomeScreen(
             )
         }
 
-        items(uiState.keywords) { keyword ->
+        items(mainUiState.keywords) { keyword ->
             KeywordCard(keyword = keyword)
         }
     }
 }
 
 @Composable
-private fun KeywordCard(keyword: StudyKeyword) {
+private fun KeywordCard(keyword: Keyword) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -95,7 +98,7 @@ private fun KeywordCard(keyword: StudyKeyword) {
                 fontWeight = FontWeight.SemiBold
             )
             Text(
-                text = keyword.summary,
+                text = keyword.description,
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(top = 8.dp)
             )

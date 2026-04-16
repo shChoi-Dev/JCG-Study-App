@@ -2,108 +2,182 @@
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.certstudy.model.QuizType
-import com.example.certstudy.viewmodel.StudyViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.certstudy.viewmodel.QuizViewModel
 
 @Composable
-fun QuizScreen(studyViewModel: StudyViewModel) {
-    val quizItems = studyViewModel.quizzes
-    var currentIndex by rememberSaveable { mutableStateOf(0) }
-    var userAnswer by rememberSaveable { mutableStateOf("") }
-    var resultText by remember { mutableStateOf<String?>(null) }
+fun QuizScreen() {
+    val quizViewModel: QuizViewModel = viewModel()
+    val uiState by quizViewModel.uiState.collectAsStateWithLifecycle()
 
-    val currentQuiz = quizItems[currentIndex]
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Text(
-            text = "퀴즈 ${currentIndex + 1}/${quizItems.size}",
-            style = MaterialTheme.typography.titleMedium
-        )
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    if (uiState.isFinished) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(
-                    text = if (currentQuiz.type == QuizType.OX) "O/X 문제" else "단답형 문제",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(text = currentQuiz.question, style = MaterialTheme.typography.bodyLarge)
-            }
-        }
-
-        if (currentQuiz.type == QuizType.OX) {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedButton(onClick = { userAnswer = "O" }) { Text("O") }
-                OutlinedButton(onClick = { userAnswer = "X" }) { Text("X") }
-            }
-            Text(text = "선택: ${if (userAnswer.isBlank()) "없음" else userAnswer}")
-        } else {
-            OutlinedTextField(
-                value = userAnswer,
-                onValueChange = { userAnswer = it },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("정답 입력") },
-                singleLine = true
-            )
-        }
-
-        Button(
-            onClick = {
-                val isCorrect = studyViewModel.checkAnswer(currentQuiz, userAnswer)
-                resultText = if (isCorrect) {
-                    "정답입니다! ${currentQuiz.explanation}"
-                } else {
-                    "오답입니다. 정답: ${currentQuiz.answer} | ${currentQuiz.explanation}"
-                }
-            },
-            enabled = userAnswer.isNotBlank()
-        ) {
-            Text("정답 확인")
-        }
-
-        resultText?.let {
             Text(
-                text = it,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                text = "퀴즈 완료! 총 ${uiState.score}점",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
             )
-        }
 
-        Button(onClick = {
-            currentIndex = (currentIndex + 1) % quizItems.size
-            userAnswer = ""
-            resultText = null
-        }) {
-            Text("다음 문제")
+            Button(
+                onClick = { quizViewModel.restart() },
+                modifier = Modifier.padding(top = 24.dp)
+            ) {
+                Text("다시 풀기")
+            }
+        }
+    } else {
+        val quiz = quizViewModel.getQuiz(uiState.currentIndex)
+        val isUserCorrect = uiState.selectedOptionIndex == quiz.correctIndex
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "오늘의 퀴즈",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            Text(
+                text = "${uiState.currentIndex + 1} / ${quizViewModel.quizCount}",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Text(
+                text = quiz.question,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                quiz.options.forEachIndexed { index, optionText ->
+                    Button(
+                        onClick = { quizViewModel.onOptionSelected(index) },
+                        enabled = !uiState.isEvaluated,
+                        colors = quizOptionButtonColors(
+                            isEvaluated = uiState.isEvaluated,
+                            isCorrectOption = index == quiz.correctIndex,
+                            isSelectedWrongOption = uiState.selectedOptionIndex == index &&
+                                index != quiz.correctIndex
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(optionText)
+                    }
+                }
+            }
+
+            if (uiState.isEvaluated) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = if (isUserCorrect) "✅ 정답입니다!" else "❌ 오답입니다!",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isUserCorrect) LightGreen else LightRed
+                        )
+                        Text(
+                            text = "해설",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = quiz.explanation,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                }
+
+                Button(
+                    onClick = { quizViewModel.moveToNextQuestion() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+                    Text(
+                        if (uiState.currentIndex == quizViewModel.quizCount - 1) {
+                            "결과 보기"
+                        } else {
+                            "다음 문제"
+                        }
+                    )
+                }
+            }
         }
     }
 }
+
+@Composable
+private fun quizOptionButtonColors(
+    isEvaluated: Boolean,
+    isCorrectOption: Boolean,
+    isSelectedWrongOption: Boolean
+): ButtonColors {
+    val colorScheme = MaterialTheme.colorScheme
+
+    return when {
+        !isEvaluated -> ButtonDefaults.buttonColors()
+        isCorrectOption -> ButtonDefaults.buttonColors(
+            containerColor = LightGreen,
+            contentColor = Color.White,
+            disabledContainerColor = LightGreen,
+            disabledContentColor = Color.White
+        )
+        isSelectedWrongOption -> ButtonDefaults.buttonColors(
+            containerColor = LightRed,
+            contentColor = Color.White,
+            disabledContainerColor = LightRed,
+            disabledContentColor = Color.White
+        )
+        else -> ButtonDefaults.buttonColors(
+            disabledContainerColor = colorScheme.primary.copy(alpha = 0.35f),
+            disabledContentColor = colorScheme.onPrimary.copy(alpha = 0.85f)
+        )
+    }
+}
+
+private val LightGreen = Color(0xFF66BB6A)
+private val LightRed = Color(0xFFEF5350)
