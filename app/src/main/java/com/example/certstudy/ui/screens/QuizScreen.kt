@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Button
@@ -16,7 +18,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -56,6 +57,7 @@ fun QuizScreen() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -117,7 +119,11 @@ fun QuizScreen() {
                             text = if (isUserCorrect) "✅ 정답입니다!" else "❌ 오답입니다!",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = if (isUserCorrect) LightGreen else LightRed
+                            color = if (isUserCorrect) {
+                                MaterialTheme.colorScheme.tertiary
+                            } else {
+                                MaterialTheme.colorScheme.error
+                            }
                         )
                         Text(
                             text = "해설",
@@ -161,16 +167,16 @@ private fun quizOptionButtonColors(
     return when {
         !isEvaluated -> ButtonDefaults.buttonColors()
         isCorrectOption -> ButtonDefaults.buttonColors(
-            containerColor = LightGreen,
-            contentColor = Color.White,
-            disabledContainerColor = LightGreen,
-            disabledContentColor = Color.White
+            containerColor = colorScheme.tertiaryContainer,
+            contentColor = colorScheme.onTertiaryContainer,
+            disabledContainerColor = colorScheme.tertiaryContainer,
+            disabledContentColor = colorScheme.onTertiaryContainer
         )
         isSelectedWrongOption -> ButtonDefaults.buttonColors(
-            containerColor = LightRed,
-            contentColor = Color.White,
-            disabledContainerColor = LightRed,
-            disabledContentColor = Color.White
+            containerColor = colorScheme.errorContainer,
+            contentColor = colorScheme.onErrorContainer,
+            disabledContainerColor = colorScheme.errorContainer,
+            disabledContentColor = colorScheme.onErrorContainer
         )
         else -> ButtonDefaults.buttonColors(
             disabledContainerColor = colorScheme.primary.copy(alpha = 0.35f),
@@ -178,6 +184,3 @@ private fun quizOptionButtonColors(
         )
     }
 }
-
-private val LightGreen = Color(0xFF66BB6A)
-private val LightRed = Color(0xFFEF5350)

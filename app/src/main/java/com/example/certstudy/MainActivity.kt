@@ -26,8 +26,8 @@ import com.example.certstudy.ui.screens.ExamDateSettingScreen
 import com.example.certstudy.ui.screens.HomeScreen
 import com.example.certstudy.ui.screens.QuizScreen
 import com.example.certstudy.ui.theme.CertStudyTheme
+import com.example.certstudy.viewmodel.HomeViewModel
 import com.example.certstudy.viewmodel.StudyViewModel
-import com.example.certstudy.viewmodel.MainViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,7 +45,7 @@ class MainActivity : ComponentActivity() {
 fun CertStudyApp() {
     val navController = rememberNavController()
     val studyViewModel: StudyViewModel = viewModel()
-    val mainViewModel: MainViewModel = viewModel()
+    val homeViewModel: HomeViewModel = viewModel()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
@@ -87,7 +87,7 @@ fun CertStudyApp() {
             composable(BottomTab.Home.route) {
                 HomeScreen(
                     studyViewModel = studyViewModel,
-                    mainViewModel = mainViewModel,
+                    homeViewModel = homeViewModel,
                     onOpenExamDateSetting = { navController.navigate(Screen.ExamDateSetting.route) }
                 )
             }

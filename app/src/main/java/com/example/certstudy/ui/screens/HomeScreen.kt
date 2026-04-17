@@ -20,17 +20,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.certstudy.model.Keyword
+import com.example.certstudy.viewmodel.HomeViewModel
 import com.example.certstudy.viewmodel.StudyViewModel
-import com.example.certstudy.viewmodel.MainViewModel
 
 @Composable
 fun HomeScreen(
     studyViewModel: StudyViewModel,
-    mainViewModel: MainViewModel,
+    homeViewModel: HomeViewModel,
     onOpenExamDateSetting: () -> Unit
 ) {
-    val uiState by studyViewModel.homeUiState.collectAsStateWithLifecycle()
-    val mainUiState by mainViewModel.uiState.collectAsStateWithLifecycle()
+    val studyUiState by studyViewModel.homeUiState.collectAsStateWithLifecycle()
+    val keywordUiState by homeViewModel.uiState.collectAsStateWithLifecycle()
 
     LazyColumn(
         modifier = Modifier
@@ -54,13 +54,13 @@ fun HomeScreen(
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     Text(
-                        text = if (uiState.dDay >= 0) "D-${uiState.dDay}" else "시험 종료",
+                        text = if (studyUiState.dDay >= 0) "D-${studyUiState.dDay}" else "시험 종료",
                         style = MaterialTheme.typography.displaySmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "시험일: ${uiState.examDate}",
+                        text = "시험일: ${studyUiState.examDate}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
@@ -79,7 +79,7 @@ fun HomeScreen(
             )
         }
 
-        items(mainUiState.keywords) { keyword ->
+        items(keywordUiState.keywords) { keyword ->
             KeywordCard(keyword = keyword)
         }
     }
