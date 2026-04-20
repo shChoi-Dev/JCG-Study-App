@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -165,22 +166,29 @@ private fun quizOptionButtonColors(
     val colorScheme = MaterialTheme.colorScheme
 
     return when {
-        !isEvaluated -> ButtonDefaults.buttonColors()
+        !isEvaluated -> ButtonDefaults.buttonColors(
+            containerColor = colorScheme.surfaceVariant,
+            contentColor = colorScheme.onSurfaceVariant,
+            disabledContainerColor = colorScheme.surfaceVariant,
+            disabledContentColor = colorScheme.onSurfaceVariant.copy(alpha = 0.85f)
+        )
         isCorrectOption -> ButtonDefaults.buttonColors(
-            containerColor = colorScheme.tertiaryContainer,
-            contentColor = colorScheme.onTertiaryContainer,
-            disabledContainerColor = colorScheme.tertiaryContainer,
-            disabledContentColor = colorScheme.onTertiaryContainer
+            containerColor = Color(0xFF4CAF50),
+            contentColor = Color.White,
+            disabledContainerColor = Color(0xFF4CAF50),
+            disabledContentColor = Color.White
         )
         isSelectedWrongOption -> ButtonDefaults.buttonColors(
-            containerColor = colorScheme.errorContainer,
-            contentColor = colorScheme.onErrorContainer,
-            disabledContainerColor = colorScheme.errorContainer,
-            disabledContentColor = colorScheme.onErrorContainer
+            containerColor = Color(0xFFE53935),
+            contentColor = Color.White,
+            disabledContainerColor = Color(0xFFE53935),
+            disabledContentColor = Color.White
         )
         else -> ButtonDefaults.buttonColors(
-            disabledContainerColor = colorScheme.primary.copy(alpha = 0.35f),
-            disabledContentColor = colorScheme.onPrimary.copy(alpha = 0.85f)
+            containerColor = colorScheme.surfaceVariant,
+            contentColor = colorScheme.onSurfaceVariant,
+            disabledContainerColor = colorScheme.surfaceVariant,
+            disabledContentColor = colorScheme.onSurfaceVariant.copy(alpha = 0.85f)
         )
     }
 }
