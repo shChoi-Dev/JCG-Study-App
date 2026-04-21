@@ -1,12 +1,17 @@
 package com.example.certstudy.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.certstudy.data.AppDatabase
 import com.example.certstudy.data.MockData
+import com.example.certstudy.data.toIncorrectQuiz
 import com.example.certstudy.model.Quiz
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 data class QuizUiState(
     val currentIndex: Int = 0,
@@ -16,9 +21,10 @@ data class QuizUiState(
     val isEvaluated: Boolean = false
 )
 
-class QuizViewModel : ViewModel() {
+class QuizViewModel(application: Application) : AndroidViewModel(application) {
 
     private var quizzes: List<Quiz> = emptyList()
+    private val incorrectQuizDao = AppDatabase.getDatabase(application).incorrectQuizDao()
 
     val quizCount: Int
         get() = quizzes.size
@@ -42,6 +48,11 @@ class QuizViewModel : ViewModel() {
 
         val quiz = quizzes[state.currentIndex]
         val isCorrect = optionIndex == quiz.correctIndex
+        if (!isCorrect) {
+            viewModelScope.launch {
+                incorrectQuizDao.insert(quiz.toIncorrectQuiz(selectedOptionIndex = optionIndex))
+            }
+        }
 
         val newScore = if (isCorrect) state.score + 1 else state.score
         _uiState.update {

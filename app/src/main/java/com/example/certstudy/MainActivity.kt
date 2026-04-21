@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Quiz
 import androidx.compose.material3.Icon
@@ -24,6 +25,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.certstudy.ui.screens.ExamDateSettingScreen
 import com.example.certstudy.ui.screens.HomeScreen
+import com.example.certstudy.ui.screens.IncorrectNoteScreen
 import com.example.certstudy.ui.screens.QuizScreen
 import com.example.certstudy.ui.theme.CertStudyTheme
 import com.example.certstudy.viewmodel.HomeViewModel
@@ -51,7 +53,8 @@ fun CertStudyApp() {
 
     val tabs = listOf(
         BottomTab.Home,
-        BottomTab.Quiz
+        BottomTab.Quiz,
+        BottomTab.IncorrectNote
     )
 
     Scaffold(
@@ -94,6 +97,9 @@ fun CertStudyApp() {
             composable(BottomTab.Quiz.route) {
                 QuizScreen()
             }
+            composable(BottomTab.IncorrectNote.route) {
+                IncorrectNoteScreen()
+            }
             composable(Screen.ExamDateSetting.route) {
                 ExamDateSettingScreen(
                     studyViewModel = studyViewModel,
@@ -107,6 +113,7 @@ fun CertStudyApp() {
 sealed class BottomTab(val route: String, val label: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
     data object Home : BottomTab("home", "Home", Icons.Default.Home)
     data object Quiz : BottomTab("quiz", "Quiz", Icons.Default.Quiz)
+    data object IncorrectNote : BottomTab("incorrect-note", "오답 노트", Icons.Default.Book)
 }
 
 sealed class Screen(val route: String) {
