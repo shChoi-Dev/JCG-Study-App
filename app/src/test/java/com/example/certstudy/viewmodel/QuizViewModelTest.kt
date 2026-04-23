@@ -92,6 +92,31 @@ class QuizViewModelTest {
 
         coVerify(exactly = 1) { incorrectQuizDao.insert(any()) }
     }
+
+    @Test
+    fun onOptionSelected_whenAlreadyEvaluated_scoreAndSelectionDoNotChange() = runTest {
+        val viewModel = QuizViewModel(application)
+        val currentQuiz = viewModel.getQuiz(0)
+        val wrongIndex = (0..3).first { it != currentQuiz.correctIndex }
+
+        // 오답을 클릭해서 채점 완료 상태로 변경
+        viewModel.onOptionSelected(wrongIndex)
+        advanceUntilIdle()
+
+        var uiState = viewModel.uiState.value
+        assertTrue(uiState.isEvaluated)
+        val initialScore = uiState.score
+        val initialSelectedOptionIndex = uiState.selectedOptionIndex
+
+        // 이미 채점 완료된 상태에서 정답 인덱스를 다시 클릭
+        viewModel.onOptionSelected(currentQuiz.correctIndex)
+        advanceUntilIdle()
+
+        // 점수와 선택된 인덱스가 변하지 않고 그대로 유지되는지 검증
+        uiState = viewModel.uiState.value
+        assertEquals(initialScore, uiState.score)
+        assertEquals(initialSelectedOptionIndex, uiState.selectedOptionIndex)
+    }
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
