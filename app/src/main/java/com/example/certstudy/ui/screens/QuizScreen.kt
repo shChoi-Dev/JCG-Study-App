@@ -1,5 +1,11 @@
-﻿package com.example.certstudy.ui.screens
+package com.example.certstudy.ui.screens
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -52,105 +58,115 @@ fun QuizScreen() {
             }
         }
     } else {
-        val quiz = quizViewModel.getQuiz(uiState.currentIndex)
-        val isUserCorrect = uiState.selectedOptionIndex == quiz.correctIndex
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "오늘의 퀴즈",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
-            )
-
-            Text(
-                text = "${uiState.currentIndex + 1} / ${quizViewModel.quizCount}",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary
-            )
-
-            Text(
-                text = quiz.question,
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(top = 8.dp)
-            )
+        AnimatedContent(
+            targetState = uiState.currentIndex,
+            transitionSpec = {
+                (slideInHorizontally { width -> width } + fadeIn()).togetherWith(
+                    slideOutHorizontally { width -> -width } + fadeOut()
+                )
+            },
+            label = "quiz_animation"
+        ) { targetIndex ->
+            val quiz = quizViewModel.getQuiz(targetIndex)
+            val isUserCorrect = uiState.selectedOptionIndex == quiz.correctIndex
 
             Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                quiz.options.forEachIndexed { index, optionText ->
-                    Button(
-                        onClick = { quizViewModel.onOptionSelected(index) },
-                        enabled = !uiState.isEvaluated,
-                        colors = quizOptionButtonColors(
-                            isEvaluated = uiState.isEvaluated,
-                            isCorrectOption = index == quiz.correctIndex,
-                            isSelectedWrongOption = uiState.selectedOptionIndex == index &&
-                                index != quiz.correctIndex
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(optionText)
+                Text(
+                    text = "오늘의 퀴즈",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Text(
+                    text = "${uiState.currentIndex + 1} / ${quizViewModel.quizCount}",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                Text(
+                    text = quiz.question,
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    quiz.options.forEachIndexed { index, optionText ->
+                        Button(
+                            onClick = { quizViewModel.onOptionSelected(index) },
+                            enabled = !uiState.isEvaluated,
+                            colors = quizOptionButtonColors(
+                                isEvaluated = uiState.isEvaluated,
+                                isCorrectOption = index == quiz.correctIndex,
+                                isSelectedWrongOption = uiState.selectedOptionIndex == index &&
+                                    index != quiz.correctIndex
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(optionText)
+                        }
                     }
                 }
-            }
 
-            if (uiState.isEvaluated) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                if (uiState.isEvaluated) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = if (isUserCorrect) "✅ 정답입니다!" else "❌ 오답입니다!",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isUserCorrect) {
+                                    MaterialTheme.colorScheme.tertiary
+                                } else {
+                                    MaterialTheme.colorScheme.error
+                                }
+                            )
+                            Text(
+                                text = "해설",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = quiz.explanation,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+
+                    Button(
+                        onClick = { quizViewModel.moveToNextQuestion() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp)
                     ) {
                         Text(
-                            text = if (isUserCorrect) "✅ 정답입니다!" else "❌ 오답입니다!",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isUserCorrect) {
-                                MaterialTheme.colorScheme.tertiary
+                            if (uiState.currentIndex == quizViewModel.quizCount - 1) {
+                                "결과 보기"
                             } else {
-                                MaterialTheme.colorScheme.error
+                                "다음 문제"
                             }
                         )
-                        Text(
-                            text = "해설",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            text = quiz.explanation,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
                     }
-                }
-
-                Button(
-                    onClick = { quizViewModel.moveToNextQuestion() },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                ) {
-                    Text(
-                        if (uiState.currentIndex == quizViewModel.quizCount - 1) {
-                            "결과 보기"
-                        } else {
-                            "다음 문제"
-                        }
-                    )
                 }
             }
         }
