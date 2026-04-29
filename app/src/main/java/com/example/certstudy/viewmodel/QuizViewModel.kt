@@ -1,9 +1,8 @@
 package com.example.certstudy.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.certstudy.data.AppDatabase
+import com.example.certstudy.data.IncorrectNoteRepository
 import com.example.certstudy.data.MockData
 import com.example.certstudy.data.toIncorrectQuiz
 import com.example.certstudy.model.Quiz
@@ -21,10 +20,9 @@ data class QuizUiState(
     val isEvaluated: Boolean = false
 )
 
-class QuizViewModel(application: Application) : AndroidViewModel(application) {
+class QuizViewModel(private val repository: IncorrectNoteRepository) : ViewModel() {
 
     private var quizzes: List<Quiz> = emptyList()
-    private val incorrectQuizDao = AppDatabase.getDatabase(application).incorrectQuizDao()
 
     val quizCount: Int
         get() = quizzes.size
@@ -50,7 +48,7 @@ class QuizViewModel(application: Application) : AndroidViewModel(application) {
         val isCorrect = optionIndex == quiz.correctIndex
         if (!isCorrect) {
             viewModelScope.launch {
-                incorrectQuizDao.insert(quiz.toIncorrectQuiz(selectedOptionIndex = optionIndex))
+                repository.insertIncorrectQuiz(quiz.toIncorrectQuiz(selectedOptionIndex = optionIndex))
             }
         }
 

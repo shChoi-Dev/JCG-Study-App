@@ -1,13 +1,9 @@
 package com.example.certstudy.viewmodel
 
-import android.app.Application
-import com.example.certstudy.data.AppDatabase
-import com.example.certstudy.data.IncorrectQuizDao
+import com.example.certstudy.data.IncorrectNoteRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -32,21 +28,12 @@ class QuizViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private lateinit var application: Application
-    private lateinit var appDatabase: AppDatabase
-    private lateinit var incorrectQuizDao: IncorrectQuizDao
+    private lateinit var repository: IncorrectNoteRepository
 
     @Before
     fun setUp() {
-        application = mockk(relaxed = true)
-        appDatabase = mockk()
-        incorrectQuizDao = mockk()
-
-        coEvery { incorrectQuizDao.insert(any()) } returns Unit
-        every { appDatabase.incorrectQuizDao() } returns incorrectQuizDao
-
-        mockkObject(AppDatabase.Companion)
-        every { AppDatabase.getDatabase(application) } returns appDatabase
+        repository = mockk()
+        coEvery { repository.insertIncorrectQuiz(any()) } returns Unit
     }
 
     @After
@@ -56,7 +43,7 @@ class QuizViewModelTest {
 
     @Test
     fun onOptionSelected_whenCorrectAnswerSelected_scoreIncreasesAndEvaluatedTrue() = runTest {
-        val viewModel = QuizViewModel(application)
+        val viewModel = QuizViewModel(repository)
         val currentQuiz = viewModel.getQuiz(0)
 
         viewModel.onOptionSelected(currentQuiz.correctIndex)
@@ -69,7 +56,7 @@ class QuizViewModelTest {
 
     @Test
     fun onOptionSelected_whenWrongAnswerSelected_scoreStaysAndWrongIndexSaved() = runTest {
-        val viewModel = QuizViewModel(application)
+        val viewModel = QuizViewModel(repository)
         val currentQuiz = viewModel.getQuiz(0)
         val wrongIndex = (0..3).first { it != currentQuiz.correctIndex }
 
@@ -83,19 +70,19 @@ class QuizViewModelTest {
 
     @Test
     fun onOptionSelected_whenWrongAnswerSelected_insertIncorrectQuizCalledOnce() = runTest {
-        val viewModel = QuizViewModel(application)
+        val viewModel = QuizViewModel(repository)
         val currentQuiz = viewModel.getQuiz(0)
         val wrongIndex = (0..3).first { it != currentQuiz.correctIndex }
 
         viewModel.onOptionSelected(wrongIndex)
         advanceUntilIdle()
 
-        coVerify(exactly = 1) { incorrectQuizDao.insert(any()) }
+        coVerify(exactly = 1) { repository.insertIncorrectQuiz(any()) }
     }
 
     @Test
     fun onOptionSelected_whenAlreadyEvaluated_scoreAndSelectionDoNotChange() = runTest {
-        val viewModel = QuizViewModel(application)
+        val viewModel = QuizViewModel(repository)
         val currentQuiz = viewModel.getQuiz(0)
         val wrongIndex = (0..3).first { it != currentQuiz.correctIndex }
 
