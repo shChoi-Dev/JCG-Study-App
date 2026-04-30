@@ -27,11 +27,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.certstudy.data.IncorrectQuiz
+import com.example.certstudy.viewmodel.AppViewModelProvider
 import com.example.certstudy.viewmodel.IncorrectNoteViewModel
 
 @Composable
 fun IncorrectNoteScreen() {
-    val viewModel: IncorrectNoteViewModel = viewModel()
+    val viewModel: IncorrectNoteViewModel = viewModel(factory = AppViewModelProvider.Factory)
     val incorrectQuizzes by viewModel.incorrectQuizzes.collectAsStateWithLifecycle(initialValue = emptyList())
 
     if (incorrectQuizzes.isEmpty()) {

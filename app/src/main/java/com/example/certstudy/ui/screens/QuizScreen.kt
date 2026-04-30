@@ -29,11 +29,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.certstudy.viewmodel.AppViewModelProvider
 import com.example.certstudy.viewmodel.QuizViewModel
 
 @Composable
 fun QuizScreen() {
-    val quizViewModel: QuizViewModel = viewModel()
+    val quizViewModel: QuizViewModel = viewModel(factory = AppViewModelProvider.Factory)
     val uiState by quizViewModel.uiState.collectAsStateWithLifecycle()
 
     if (uiState.isFinished) {
