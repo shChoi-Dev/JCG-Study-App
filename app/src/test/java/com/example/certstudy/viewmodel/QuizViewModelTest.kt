@@ -32,7 +32,7 @@ class QuizViewModelTest {
 
     @Before
     fun setUp() {
-        repository = mockk()
+        repository = mockk<IncorrectNoteRepository>()
         coEvery { repository.insertIncorrectQuiz(any()) } returns Unit
     }
 
